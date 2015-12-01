@@ -25,4 +25,6 @@ all: all
 	javac MST.java
 run:
 	java MST
+clean:
+	rm -fv *.class
 

@@ -21,9 +21,9 @@
 #argument is currently unused; it’s it’s here to support your parallelization
 #efforts.
 
-all: all
+all:
 	javac MST.java
-run:
+run: all
 	java MST
 clean:
 	rm -fv *.class

@@ -359,7 +359,7 @@ class Surface {
 
     // Signatures for things someone might want us to do with a point or
     // an edge (e.g., display it).
-    // 
+    //
     public interface EdgeRoutine {
         public void run(int x1, int y1, int x2, int y2, boolean treeEdge)
             throws Coordinator.KilledException;

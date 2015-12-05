@@ -30,6 +30,7 @@ import java.util.*;
 import java.lang.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Exchanger;
 
 public class MST {
     private static int n = 50;              // default number of points
@@ -670,25 +671,48 @@ class Surface {
         }
     }
 
-
-    class SlaveDwyer extends Thread {
-        private Coordinator c;
+    //Thread work for triangulate function
+    class RunTriangulate implements Runnable {
         private int l, r, low0, high0, low1, high1, parity;
+
+        public RunTriangulate(int l, int r, int low0, int high0,
+                              int low1, int high1, int parity) {
+            this.l = l;
+            this.r = r;
+            this.low0 = low0;
+            this.high0 = high0;
+            this.low1 = low1;
+            this.high1 = high1;
+            this.parity = parity;
+        }
+
+        @Override
+        public void run() {
+            try {
+                triangulate(l, r, low0, high0, low1, high1, parity);
+            } catch (Coordinator.KilledException e) {
+                e.toString();
+            }
+        }
+    }
+
+    //Worker threads for both Dwyer and Kruskal solver
+    class Slave extends Thread {
+        private Coordinator c;
+        private Runnable thread_task;
 
         public void run() {
             c.register();
             try {
-                triangulate(l, r, low0, high0, low1, high1, parity);
-            } catch (Coordinator.KilledException e) {
-                c.unregister();
+                thread_task.run();
+            } finally {
             }
             c.unregister();
         }
 
-        public SlaveDwyer(Coordinator C, int l, int r, int low0, int high0,
-                          int low1, int high1, int parity) {
+        public Slave(Coordinator C, Runnable ThreadTask) {
             c = C;
-
+            thread_task = ThreadTask;
         }
     }
 
@@ -728,7 +752,7 @@ class Surface {
         if (l == r - 1) {
             // points is global to class - potential conflicts with threads
             // updating the same version causing conflicts perhaps?
-            new edge(points[l], points[r], null, null, dir1);
+            // new edge(points[l], points[r], null, null, dir1);
             // direction doesn't matter in this case
             return;
         }
@@ -834,24 +858,19 @@ class Surface {
         if (i < l) {
             // empty left half
             //triangulate(j, r, low1, high1, mid, high0, 1-parity);
-            SlaveDwyer sd = new SlaveDwyer(coord, j, r, low1, high1, mid, high0, 1 - parity);
-            sd.start();
+            new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1 - parity)).start();
         } else if (j > r) {
             // empty right half
-//            triangulate(l, i, low1, high1, low0, mid, 1-parity);
-            SlaveDwyer sd0 = new SlaveDwyer(coord, l, i, low1, high1, low0, mid, 1 - parity);
-            sd0.start();
+            //triangulate(l, i, low1, high1, low0, mid, 1-parity);
+            new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity)).start();
         } else {
-            // divide and conquer
             triangulate(l, i, low1, high1, low0, mid, 1 - parity);
-//            SlaveDwyer sd1 = new SlaveDwyer(coord, l, i, low1, high1, low0, mid, 1-parity);
-//            sd1.start();
+            //new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1-parity)).start();
             triangulate(j, r, low1, high1, mid, high0, 1 - parity);
-//            SlaveDwyer sd2 = new SlaveDwyer(coord, j, r, low1, high1, mid, high0, 1-parity);
-//            sd2.start();
-
             // maybe implement a gate here, to make sure all threads are done
             // before stitching up? coord.hesistate?
+            // divide and conquer
+            // new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1-parity)).start();
 
             // prepare to stitch meshes together up the middle:
             class side {

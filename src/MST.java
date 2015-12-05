@@ -750,9 +750,10 @@ class Surface {
             return;
         }
         if (l == r - 1) {
-            // points is global to class - potential conflicts with threads
-            // updating the same version causing conflicts perhaps?
-            // new edge(points[l], points[r], null, null, dir1);
+            // Jeremy: points is global to class - potential conflicts with threads
+            // Jeremy: updating the same version causing conflicts perhaps?
+
+            new edge(points[l], points[r], null, null, dir1);
             // direction doesn't matter in this case
             return;
         }
@@ -852,6 +853,8 @@ class Surface {
             i++;
             j--;
         }
+        // divide and conquer
+
         // Now [l..i] is the left partition and [j..r] is the right.
         // Either may be empty.
 
@@ -867,10 +870,10 @@ class Surface {
             triangulate(l, i, low1, high1, low0, mid, 1 - parity);
             //new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1-parity)).start();
             triangulate(j, r, low1, high1, mid, high0, 1 - parity);
-            // maybe implement a gate here, to make sure all threads are done
-            // before stitching up? coord.hesistate?
-            // divide and conquer
             // new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1-parity)).start();
+
+            // Jeremy: maybe implement a gate here, to make sure all threads are done
+            // Jeremy: before stitching up? coord.hesistate?
 
             // prepare to stitch meshes together up the middle:
             class side {

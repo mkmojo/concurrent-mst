@@ -684,6 +684,8 @@ class Surface {
             return;
         }
         if (l == r-1) {
+            // points is global to class - potential conflicts with threads
+            // updating the same version causing conflicts perhaps?
             new edge(points[l], points[r], null, null, dir1);
                 // direction doesn't matter in this case
             return;
@@ -794,6 +796,9 @@ class Surface {
             triangulate(j, r, low1, high1, mid, high0, 1-parity);
 //            SlaveDwyer sd2 = new SlaveDwyer(coord, j, r, low1, high1, mid, high0, 1-parity);
 //            sd2.start();
+
+            // maybe implement a gate here, to make sure all threads are done
+            // before stitching up? coord.hesistate?
 
             // prepare to stitch meshes together up the middle:
             class side {

@@ -20,12 +20,15 @@
     code written in 2007.
  */
 
+import jdk.nashorn.internal.codegen.CompilerConstants;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 import java.util.*;
 import java.lang.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class MST {
@@ -144,6 +147,12 @@ public class MST {
     public static void main(String[] args) {
         parseArgs(args);
         MST me = new MST();
+
+        // testing coordinator
+        //CoordTest ct = new CoordTest(50);
+        //ct.TestStart();
+        //ct.TestToggle();
+
         JFrame f = null;
         if (animate == SHOW_RESULT || animate == FULL_ANIMATION) {
             f = new JFrame("MST");
@@ -231,6 +240,8 @@ class Worker extends Thread {
         a = A;
     }
 }
+
+
 
 // The Surface is the MST world, containing all the points and edges.
 //
@@ -361,11 +372,11 @@ class Surface {
     // an edge (e.g., display it).
     //
     public interface EdgeRoutine {
-        public void run(int x1, int y1, int x2, int y2, boolean treeEdge)
+        void run(int x1, int y1, int x2, int y2, boolean treeEdge)
             throws Coordinator.KilledException;
     }
     public interface PointRoutine{
-        public void run(int x, int y);
+        void run(int x, int y);
     }
 
     public void forAllPoints(PointRoutine pr) {
@@ -622,6 +633,29 @@ class Surface {
         }
     }
 
+
+
+    class SlaveDwyer extends Thread {
+        private Coordinator c;
+        private int l, r, low0, high0, low1, high1, parity;
+
+        public void run() {
+            c.register();
+            try {
+                triangulate(l, r, low0, high0, low1, high1, parity);
+            }catch (Coordinator.KilledException e){
+                c.unregister();
+            }
+            c.unregister();
+        }
+
+        public SlaveDwyer(Coordinator C,  int l, int r, int low0, int high0,
+                          int low1, int high1, int parity) {
+            c = C;
+
+        }
+    }
+
     // Divide points[l..r] into two partitions.  Solve recursively, then
     // stitch back together.  Dim0 values range from [low0..high0].
     // Dim1 values range from [low1..high1].  We partition based on dim0.
@@ -681,7 +715,7 @@ class Surface {
             // invariants: [i..j] are unexamined;
             // [l..i) are all <= mid; (j..r] are all > mid.
 
-            int i0 = 0;  int j0 = 0;
+            int i0;  int j0;
 
             while (i < j) {
                 i0 = points[i].getCoord(dim0);
@@ -744,14 +778,22 @@ class Surface {
 
         if (i < l) {
             // empty left half
-            triangulate(j, r, low1, high1, mid, high0, 1-parity);
+            //triangulate(j, r, low1, high1, mid, high0, 1-parity);
+            SlaveDwyer sd = new SlaveDwyer(coord, j, r, low1, high1, mid, high0, 1-parity);
+            sd.start();
         } else if (j > r) {
             // empty right half
-            triangulate(l, i, low1, high1, low0, mid, 1-parity);
+//            triangulate(l, i, low1, high1, low0, mid, 1-parity);
+            SlaveDwyer sd0 = new SlaveDwyer(coord, l, i, low1, high1, low0, mid, 1-parity);
+            sd0.start();
         } else {
             // divide and conquer
             triangulate(l, i, low1, high1, low0, mid, 1-parity);
+//            SlaveDwyer sd1 = new SlaveDwyer(coord, l, i, low1, high1, low0, mid, 1-parity);
+//            sd1.start();
             triangulate(j, r, low1, high1, mid, high0, 1-parity);
+//            SlaveDwyer sd2 = new SlaveDwyer(coord, j, r, low1, high1, mid, high0, 1-parity);
+//            sd2.start();
 
             // prepare to stitch meshes together up the middle:
             class side {

@@ -867,21 +867,28 @@ class Surface {
         } else {
             // divide and conquer
             //TODO: use coord to see if has reached thread cap
-            Slave s1 = new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity));
-            s1.start();
-            Slave s2 = new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1 - parity));
-            s2.start();
+            if (r - l > n / 16) {
+                //large enough work, use new thread
+                Slave s1 = new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity));
+                s1.start();
+                Slave s2 = new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1 - parity));
+                s2.start();
 
-            //wait for child recursive call to come back
-            try {
-                s1.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            try {
-                s2.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                //wait for child recursive call to come back
+                try {
+                    s1.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    s2.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                //small work, no need for new thread
+                triangulate(l, i, low1, high1, low0, mid, 1 - parity);
+                triangulate(j, r, low1, high1, mid, high0, 1 - parity);
             }
 
             // prepare to stitch meshes together up the middle:
@@ -962,7 +969,7 @@ class Surface {
             }
             findBottomClass findBottom = new findBottomClass();
             while (findBottom.move(left, dir1, right.p)
-                    || findBottom.move(right, dir0, left.p));
+                    || findBottom.move(right, dir0, left.p)) ;
 
             // create bottom edge:
             edge base = new edge(left.p, right.p,

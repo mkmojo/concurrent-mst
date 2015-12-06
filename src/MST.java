@@ -853,27 +853,36 @@ class Surface {
             i++;
             j--;
         }
-        // divide and conquer
-
         // Now [l..i] is the left partition and [j..r] is the right.
         // Either may be empty.
 
         if (i < l) {
             // empty left half
-            //triangulate(j, r, low1, high1, mid, high0, 1-parity);
-            new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1 - parity)).start();
+            //will return right away, no need to spawn new thread for this
+            triangulate(j, r, low1, high1, mid, high0, 1 - parity);
         } else if (j > r) {
             // empty right half
-            //triangulate(l, i, low1, high1, low0, mid, 1-parity);
-            new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity)).start();
-        } else {
+            //will return right away, no need to spawn new thread for this
             triangulate(l, i, low1, high1, low0, mid, 1 - parity);
-            //new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1-parity)).start();
-            triangulate(j, r, low1, high1, mid, high0, 1 - parity);
-            // new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1-parity)).start();
+        } else {
+            // divide and conquer
+            //TODO: use coord to see if has reached thread cap
+            Slave s1 = new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity));
+            s1.start();
+            Slave s2 = new Slave(coord, new RunTriangulate(j, r, low1, high1, mid, high0, 1 - parity));
+            s2.start();
 
-            // Jeremy: maybe implement a gate here, to make sure all threads are done
-            // Jeremy: before stitching up? coord.hesistate?
+            //wait for child recursive call to come back
+            try {
+                s1.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                s2.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             // prepare to stitch meshes together up the middle:
             class side {
@@ -885,7 +894,7 @@ class Surface {
                 public int ai;      // index of p within a
                 public int bi;      // index of p within b
             }
-            ;
+
             side left = new side();
             side right = new side();
             left.p = lp;
@@ -952,8 +961,7 @@ class Surface {
                 }
             }
             findBottomClass findBottom = new findBottomClass();
-            do {
-            } while (findBottom.move(left, dir1, right.p)
+            while (findBottom.move(left, dir1, right.p)
                     || findBottom.move(right, dir0, left.p));
 
             // create bottom edge:

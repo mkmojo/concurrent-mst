@@ -18,16 +18,27 @@
 //
 class Coordinator {
     private boolean open = true;
-        // set to false temporarily when threads are supposed to die.
+    // set to false temporarily when threads are supposed to die.
     private boolean running = true;
-        // set to false when threads are supposed to pause.
+    // set to false when threads are supposed to pause.
     private int numThreads = 0;
-        // number of active worker threads.  Maintained by register and
-        // unregister methods.
+    // number of active worker threads.  Maintained by register and
+    // unregister methods.
+
+    private int maxThreads = 0;
 
     // A thread terminates early by throwing itself a KilledException.
     //
-    public class KilledException extends Throwable {}
+    public class KilledException extends Throwable {
+    }
+
+    public synchronized int getNumThreads(){
+        return numThreads;
+    }
+
+    public synchronized int getMaxThreads(){
+        return maxThreads;
+    }
 
     public synchronized void register() {
         numThreads++;
@@ -36,7 +47,7 @@ class Coordinator {
     public synchronized void unregister() {
         numThreads--;
         notifyAll();
-            // so event thread knows to inspect numThreads again
+        // so event thread knows to inspect numThreads again
     }
 
     // Pause or die if so instructed.
@@ -51,7 +62,8 @@ class Coordinator {
         while (!running) {
             try {
                 wait();
-            } catch(InterruptedException e) {};
+            } catch (InterruptedException e) {
+            }
             if (!open) {
                 numThreads--;
                 notify();
@@ -65,7 +77,8 @@ class Coordinator {
     public void hesitate() throws KilledException {
         try {
             Thread.sleep(50);   // milliseconds
-        } catch(InterruptedException e) {};
+        } catch (InterruptedException e) {
+        }
         gate();
     }
 
@@ -86,11 +99,14 @@ class Coordinator {
         while (numThreads > 0) {
             try {
                 wait();
-            } catch(InterruptedException e) {};
+            } catch (InterruptedException e) {
+            }
         }
         open = true;
         running = true;
     }
 
-    // (Default constructor only)
+    public Coordinator(int maxThreads){
+        this.maxThreads = maxThreads;
+    }
 }

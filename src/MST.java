@@ -111,7 +111,7 @@ public class MST {
     // Initialize appropriate program components for specified animation mode.
     //
     private Surface build(RootPaneContainer pane, int an) {
-        final Coordinator c = new Coordinator();
+        final Coordinator c = new Coordinator(numThreads);
         Surface s = new Surface(n, sd, c);
         Animation t = null;
         if (an == SHOW_RESULT || an == FULL_ANIMATION) {
@@ -155,12 +155,6 @@ public class MST {
     public static void main(String[] args) {
         parseArgs(args);
         MST me = new MST();
-
-        // testing coordinator
-        //CoordTest ct = new CoordTest(50);
-        //ct.TestStart();
-        //ct.TestToggle();
-
         JFrame f = null;
         if (animate == SHOW_RESULT || animate == FULL_ANIMATION) {
             f = new JFrame("MST");
@@ -867,7 +861,7 @@ class Surface {
         } else {
             // divide and conquer
             //TODO: use coord to see if has reached thread cap
-            if (r - l > n / 16) {
+            if ( (r - l > n / coord.getMaxThreads())  &&  (coord.getMaxThreads() - coord.getNumThreads() >= 2) ) {
                 //large enough work, use new thread
                 Slave s1 = new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity));
                 s1.start();

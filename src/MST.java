@@ -26,6 +26,7 @@ import java.io.*;
 import java.nio.Buffer;
 import java.util.*;
 import java.lang.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Exchanger;
 
@@ -725,6 +726,20 @@ class Surface {
                 return (y3 >= m * (((double) x3) - x1) + y1);
                 // p3 above line
             }
+        }
+    }
+
+    //Thread work for subtree function
+    class RunSubTree implements Callable<point> {
+        private point p;
+
+        public RunSubTree(point p) {
+            this.p = p;
+        }
+
+        @Override
+        public point call() {
+            return p.subtree();
         }
     }
 

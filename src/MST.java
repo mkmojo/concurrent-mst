@@ -26,9 +26,7 @@ import java.io.*;
 import java.nio.Buffer;
 import java.util.*;
 import java.lang.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Exchanger;
+import java.util.concurrent.*;
 
 public class MST {
     private static int n = 4;              // default number of points
@@ -1135,16 +1133,27 @@ class Surface {
     // enumeration occurs shortest-to-longest.
     //
     public void KruskalSolve()
-            throws Coordinator.KilledException {
+        throws Coordinator.KilledException {
         int numTrees = n;
+        ExecutorService executor1 = Executors.newSingleThreadExecutor();
+        ExecutorService executor2 = Executors.newSingleThreadExecutor();
         for (edge e : edges) {
-            point st1 = e.points[0].subtree();
-            point st2 = e.points[1].subtree();
-            if (st1 != st2) {
-                // This edge joins two previously separate subtrees.
-                st1.merge(st2);
-                e.addToMST();
-                if (--numTrees == 1) break;
+            point st1, st2;
+            Future<point> future1 = executor1.submit(new RunSubTree(e.points[0]));
+            Future<point> future2 = executor2.submit(new RunSubTree(e.points[1]));
+
+            //wait for child recursive call to come back
+            try {
+                st1 = future1.get();
+                st2 = future2.get();
+                if (st1 != st2) {
+                    // This edge joins two previously separate subtrees.
+                    st1.merge(st2);
+                    e.addToMST();
+                    if (--numTrees == 1) break;
+                }
+            } catch (InterruptedException | ExecutionException exp) {
+                exp.printStackTrace();
             }
         }
     }

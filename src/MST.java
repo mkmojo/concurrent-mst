@@ -20,22 +20,20 @@
     code written in 2007.
  */
 
-import jdk.nashorn.internal.codegen.CompilerConstants;
-
-import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import javax.swing.*;
+import java.io.*;
+import java.nio.Buffer;
 import java.util.*;
 import java.lang.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Exchanger;
 
 public class MST {
-    private static int n = 50;              // default number of points
+    private static int n = 4;              // default number of points
     private static long sd = 0;             // default random number seed
     private static int numThreads = 1;      // default
+    private static String datafilePath = "";
 
     private static final int TIMING_ONLY = 0;
     private static final int PRINT_EVENTS = 1;
@@ -102,6 +100,19 @@ public class MST {
                         System.err.printf("Invalid number of threads: %s\n", args[i]);
                     }
                 }
+            } else if (args[i].equals("-f")) {
+                if (++i >= args.length) {
+                    System.err.print("Missing data file path\n");
+                } else {
+                    String sdatafilepath = "";
+                    sdatafilepath = args[i];
+                    System.out.println("path: " + sdatafilepath);
+                    if (!sdatafilepath.isEmpty()) {
+                        datafilePath = sdatafilepath;
+                    } else {
+                        System.err.printf("Empty file name %s\n", args[i]);
+                    }
+                }
             } else {
                 System.err.printf("Unexpected argument: %s\n", args[i]);
             }
@@ -112,7 +123,7 @@ public class MST {
     //
     private Surface build(RootPaneContainer pane, int an) {
         final Coordinator c = new Coordinator(numThreads);
-        Surface s = new Surface(n, sd, c);
+        Surface s = new Surface(n, sd, c, datafilePath);
         Animation t = null;
         if (an == SHOW_RESULT || an == FULL_ANIMATION) {
             t = new Animation(s);
@@ -278,6 +289,9 @@ class Surface {
     public int getMaxy() {
         return maxy;
     }
+
+    //used when want to load from file
+    private final String datafilePath;
 
     // The following 7 fields are set by the Surface constructor.
     private final Coordinator coord;
@@ -576,29 +590,75 @@ class Surface {
     // Called by the UI when it wants to start over.
     //
     public void reset() {
-        prn.setSeed(sd);
-        minx = Integer.MAX_VALUE;
-        miny = Integer.MAX_VALUE;
-        maxx = Integer.MIN_VALUE;
-        maxy = Integer.MIN_VALUE;
-        pointHash.clear();      // empty out the set of points
-        for (int i = 0; i < n; i++) {
-            point p;
-            int x;
-            int y;
-            do {
-                x = prn.nextInt();
-                y = prn.nextInt();
-                p = new point(x, y);
-            } while (pointHash.contains(p));
-            pointHash.add(p);
-            if (x < minx) minx = x;
-            if (y < miny) miny = y;
-            if (x > maxx) maxx = x;
-            if (y > maxy) maxy = y;
-            points[i] = p;
+        if(datafilePath.isEmpty()) {
+            prn.setSeed(sd);
+            minx = Integer.MAX_VALUE;
+            miny = Integer.MAX_VALUE;
+            maxx = Integer.MIN_VALUE;
+            maxy = Integer.MIN_VALUE;
+            pointHash.clear();      // empty out the set of points
+            for (int i = 0; i < n; i++) {
+                point p;
+                int x;
+                int y;
+                do {
+                    x = prn.nextInt();
+                    y = prn.nextInt();
+                    p = new point(x, y);
+                } while (pointHash.contains(p));
+                pointHash.add(p);
+                if (x < minx) minx = x;
+                if (y < miny) miny = y;
+                if (x > maxx) maxx = x;
+                if (y > maxy) maxy = y;
+                points[i] = p;
+            }
+            edges.clear();      // empty out the set of edges
+        }else {
+            // when datafilePath is specified
+            minx = Integer.MAX_VALUE;
+            miny = Integer.MAX_VALUE;
+            maxx = Integer.MIN_VALUE;
+            maxy = Integer.MIN_VALUE;
+            pointHash.clear();      // empty out the set of points
+            try{
+                File fdata = new File(datafilePath);
+                BufferedReader reader = new BufferedReader(new FileReader(fdata));
+                String line;
+                int count = 0;
+                while((line = reader.readLine()) != null && count < n){
+                    String [] cords;
+                    cords = line.split(" ");
+                    if(cords.length != 2) {
+                        //error happens
+                        System.out.println("Mal-formatted file");
+                        System.exit(1);
+                    }
+                    int x = Integer.parseInt(cords[0]);
+                    int y = Integer.parseInt(cords[1]);
+                    point p = new point(x, y);
+                    if(pointHash.contains(p)) continue;
+                    pointHash.add(p);
+                    if (x < minx) minx = x;
+                    if (y < miny) miny = y;
+                    if (x > maxx) maxx = x;
+                    if (y > maxy) maxy = y;
+                    points[count] = p;
+                    count++;
+                }
+                if(count < n){
+                    System.out.println("Not enough points in file " + datafilePath);
+                    System.out.printf("%d points needed, %d read, terminate\n", n, count);
+                    System.exit(1);
+                }
+                edges.clear();
+            }catch(FileNotFoundException e){
+                e.printStackTrace();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+
         }
-        edges.clear();      // empty out the set of edges
     }
 
     // If A, B, and C are on a circle, in counter-clockwise order, then
@@ -861,7 +921,7 @@ class Surface {
         } else {
             // divide and conquer
             //TODO: use coord to see if has reached thread cap
-            if ( (r - l > n / coord.getMaxThreads())  &&  (coord.getMaxThreads() - coord.getNumThreads() >= 2) ) {
+            if ((r - l > n / coord.getMaxThreads()) && (coord.getMaxThreads() - coord.getNumThreads() >= 2)) {
                 //large enough work, use new thread
                 Slave s1 = new Slave(coord, new RunTriangulate(l, i, low1, high1, low0, mid, 1 - parity));
                 s1.start();
@@ -1079,10 +1139,11 @@ class Surface {
 
     // Constructor
     //
-    public Surface(int N, long SD, Coordinator C) {
+    public Surface(int N, long SD, Coordinator C, String DATAFILEPATH) {
         n = N;
         sd = SD;
         coord = C;
+        datafilePath = DATAFILEPATH;
 
         points = new point[n];
         edges = new ConcurrentSkipListSet<edge>(new edgeComp());

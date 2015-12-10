@@ -628,10 +628,13 @@ class Surface {
                 int count = 0;
                 while((line = reader.readLine()) != null && count < n){
                     String [] cords;
-                    cords = line.split(" ");
+                    cords = line.trim().split("\\s+");
                     if(cords.length != 2) {
                         //error happens
                         System.out.println("Mal-formatted file");
+                        System.out.println("Wrong line: " + line);
+                        System.out.println("Should only have two integer points at a line");
+                        System.out.println("For instance: 2342 221");
                         System.exit(1);
                     }
                     int x = Integer.parseInt(cords[0]);

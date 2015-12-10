@@ -24,7 +24,9 @@
 all:
 	javac MST.java
 run: all
-	java MST -a 3
+	java MST -a 3 -t 4 -n 50 -f points.txt
+info: all
+	java MST -a 0 -t 4 -n 50 -f points.txt
 clean:
 	rm -fv *.class
 

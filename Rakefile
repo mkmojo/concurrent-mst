@@ -8,8 +8,9 @@ task :compile do
 end
 
 task :test => :compile do
-  9.times do |i|
-    puts `cd src && java MST -a 1 -t 8 -n 50 -s #{i}`
+  10.times do |i|
+    puts "Seed #{i}: " +
+      `cd src && java MST -a 1 -t 8 -n 50 -s #{i} | sed -ne '/elapsed.*/p'`
   end
 end
 

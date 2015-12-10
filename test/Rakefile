@@ -3,14 +3,47 @@ require 'rake'
 # default rake task
 task :default => :test
 
+# giving an arg to rake
+# rake "test[10]"
+
+# 10 million points as the base case for testing, vary thread
+# then vary threads, running 1/million per thread (1-32?)
+# then testing different startegies efficiencies (vs orig)
+#   - greedy strategy (max threads)
+#   - dynamic work threshold
+#   - static work threshold
+
 task :compile do
   system 'cd ../src && make'
 end
 
+# Create test data for project
+task :setup, [:points] do |t, p|
+  p[:points].to_i.times { |x| puts rand(p[:points].to_i).to_s +
+                          " " + rand(p[:points].to_i).to_s }
+end
+
+# Write the points to file
+task :points, [:file] do |t, p|
+  POINTS = 10000000
+  File.write(p[:file], `rake setup[#{POINTS}]`)
+end
+
+# Testing program performance
 task :test => :compile do
-  10.times do |i|
-    puts "Seed #{i}: " +
-      `cd ../src && java MST -a 0 -t 8 -n 50 -s #{i} | sed -ne '/elapsed.*/p'`
+
+  # Base case - only vary the number of threads
+  points = 10000000
+  [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].each do |i|
+    puts "Threads #{i}: " +
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt'`
+  end
+
+  # Vary both the threads and the numbrt of points
+  [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].each do |i|
+    points = i * 1000000
+    puts "Threads #{i}: " +
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt'`
   end
 end
 

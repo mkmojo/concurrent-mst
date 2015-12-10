@@ -33,17 +33,18 @@ end
 task :test => :compile do
 
   # Base case - only vary the number of threads
+  threads = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48]
   points = 10000000
-  [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].each do |i|
-    puts "Threads #{i}: " +
-      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt'`
+  threads.each do |i|
+    puts "Threads #{i}: ",
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt`
   end
 
-  # Vary both the threads and the numbrt of points
-  [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].each do |i|
-    points = i * 1000000
-    puts "Threads #{i}: " +
-      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt'`
+  # Vary both the threads and the number of points
+  threads.each do |i|
+    points = i * 10000000
+    puts "Threads #{i}: ",
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt`
   end
 end
 

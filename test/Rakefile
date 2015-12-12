@@ -4,6 +4,7 @@ require 'rake'
 task :default => :test
 M = 10**6
 K = 10**3
+K = 10
 
 # giving args to rake:
 #   - rake "test[10]"
@@ -43,7 +44,7 @@ task :test => :compile do
   threads.each do |i|
     points = i * 10*K
     puts "Points #{i}: ",
-      `cd ../orig && java MST -a 0 -n #{points} -f points`
+      `cd ../orig && java MST -a 0 -n #{points}`
   end
 
   # OUR MANY THREADED VERSIONS (constant threads)
@@ -52,7 +53,7 @@ task :test => :compile do
   points = 10*K
   threads.each do |i|
     puts "Threads #{i}: ",
-      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points`
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt`
   end
 
   # Vary both the threads and the number of points
@@ -60,7 +61,7 @@ task :test => :compile do
   threads.each do |i|
     points = i * 10*K
     puts "Threads #{i}: ",
-      `cd ../src && java MST -a 0 -t #{i} -n #{points}`
+      `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt`
   end
 end
 

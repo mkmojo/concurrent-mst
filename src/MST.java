@@ -1156,6 +1156,10 @@ class Surface {
                 exp.printStackTrace();
             }
         }
+
+        // Shutdown the threads, exit
+        executor1.shutdown();
+        executor2.shutdown();
     }
 
     // This is a wrapper for the root call to triangulate().

@@ -4,7 +4,6 @@ require 'rake'
 task :default => :test
 M = 10**6
 K = 10**3
-K = 10
 
 # giving args to rake:
 #   - rake "test[10]"
@@ -37,27 +36,27 @@ end
 # Test program performance
 task :test => :compile do
 
-  # ORIGINAL BASE VERSION (SINGLE THREAD)
-  # Base case - only vary the number of points
-  puts 'ORIGINAL BASE VERSION (SINGLE THREAD)'
-  threads = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48]
-  threads.each do |i|
-    points = i * 10*K
-    puts "Points #{i}: ",
-      `cd ../orig && java MST -a 0 -n #{points}`
-  end
+  # test points
+  points = 1*M
 
   # OUR MANY THREADED VERSIONS (constant threads)
   # Base case - only vary the number of threads
-  puts 'THREADED VERSION (10M points)'
-  points = 10*K
+  puts 'THREADED VERSION (1M points)'
+  threads = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48]
   threads.each do |i|
     puts "Threads #{i}: ",
       `cd ../src && java MST -a 0 -t #{i} -n #{points} -f points.txt`
   end
 
+  # ORIGINAL BASE VERSION (SINGLE THREAD)
+  # Base case - only vary the number of points
+  puts 'ORIGINAL BASE VERSION (SINGLE THREAD)'
+  puts "Points 1M Original: ",
+    `cd ../orig && java MST -a 0 -n #{points}`
+
+  # OUR MANY THREADED VERSIONS (constant threads)
   # Vary both the threads and the number of points
-  puts 'THREADED VERSION (10M/thread points)'
+  puts 'THREADED VERSION (100K/thread points)'
   threads.each do |i|
     points = i * 10*K
     puts "Threads #{i}: ",

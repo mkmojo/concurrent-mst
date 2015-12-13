@@ -1,0 +1,96 @@
+javac MST.java
+javac MST.java
+THREADED VERSION (1M points)
+Threads 1: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 12.193 + 31.014 = 43.207 seconds
+Threads 2: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 6.924 + 31.540 = 38.464 seconds
+Threads 3: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 7.235 + 30.768 = 38.003 seconds
+Threads 4: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 5.966 + 28.796 = 34.762 seconds
+Threads 6: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 4.729 + 28.178 = 32.907 seconds
+Threads 8: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 4.835 + 29.583 = 34.418 seconds
+Threads 12: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 3.607 + 28.462 = 32.069 seconds
+Threads 16: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 3.188 + 31.351 = 34.539 seconds
+Threads 24: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 2.593 + 31.600 = 34.193 seconds
+Threads 32: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 2.568 + 30.132 = 32.700 seconds
+Threads 48: 
+path: points.txt
+1000000 points, seed 0
+elapsed time: 2.141 + 30.565 = 32.706 seconds
+ORIGINAL BASE VERSION (SINGLE THREAD)
+Points 1M Original: 
+1000000 points, seed 0
+elapsed time: 12.055 + 0.673 = 12.728 seconds
+THREADED VERSION (100K/thread points)
+Threads 1: 
+path: points.txt
+10000 points, seed 0
+elapsed time: 0.091 + 0.323 = 0.414 seconds
+Threads 2: 
+path: points.txt
+20000 points, seed 0
+elapsed time: 0.155 + 0.527 = 0.682 seconds
+Threads 3: 
+path: points.txt
+30000 points, seed 0
+elapsed time: 0.183 + 0.940 = 1.123 seconds
+Threads 4: 
+path: points.txt
+40000 points, seed 0
+elapsed time: 0.333 + 1.283 = 1.616 seconds
+Threads 6: 
+path: points.txt
+60000 points, seed 0
+elapsed time: 0.477 + 1.812 = 2.289 seconds
+Threads 8: 
+path: points.txt
+80000 points, seed 0
+elapsed time: 0.666 + 2.694 = 3.360 seconds
+Threads 12: 
+path: points.txt
+120000 points, seed 0
+elapsed time: 0.688 + 3.635 = 4.323 seconds
+Threads 16: 
+path: points.txt
+160000 points, seed 0
+elapsed time: 0.843 + 5.086 = 5.929 seconds
+Threads 24: 
+path: points.txt
+240000 points, seed 0
+elapsed time: 1.048 + 8.442 = 9.490 seconds
+Threads 32: 
+path: points.txt
+320000 points, seed 0
+elapsed time: 1.395 + 10.144 = 11.539 seconds
+Threads 48: 
+path: points.txt
+480000 points, seed 0
+elapsed time: 1.523 + 14.968 = 16.491 seconds
